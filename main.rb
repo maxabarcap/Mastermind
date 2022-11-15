@@ -17,7 +17,7 @@ class Code #Genera un codigo aleatorio con 4 elementos entre 6 colores, pueden r
 end
 
 class Game  #Permite el correcto funcionamiento del juego
-  attr_accessor :hint, :array_code
+  attr_accessor :hint, :array_code, :last_hint
   def initialize
     @board = Board.new
     c = Code.new
@@ -44,12 +44,14 @@ class Game  #Permite el correcto funcionamiento del juego
         @hint.push(2)
       end
     end
+    @last_hint = Marshal.load(Marshal.dump(@hint.sort))
     return @hint.sort
   end
 
   def start #Instruccones y posterior desarrollo del juego
     @turn_counter = 0
     @role = nil
+    @last_hint = []
     puts "Welcome to Mastermind!\n
     \n
     The goal of the game is to solve a 4-color code (they can repeat), there are 12 attempts to do so.\n
@@ -58,16 +60,21 @@ class Game  #Permite el correcto funcionamiento del juego
     while @role == nil
       self.select_mode
     end
-    while @turn_counter <= 12
+    while (@turn_counter <= 12) and (@last_hint != [0,0,0,0])
       if @role == "codebreaker"
         self.request_code
         @board.display(@array_code,self.check) ####Aqui deberia haber un display
       elsif @role == "codemaker"
         self.request_code
         new_code = @input
-        
       end
     end
+    if @last_hint == [0,0,0,0]
+      self.reset
+    else 
+      puts "You couldn't guess the code :("
+      self.reset
+    end    
   end
 
   def select_mode #Elegir el rol del jugador
@@ -105,6 +112,19 @@ class Game  #Permite el correcto funcionamiento del juego
       puts "Invalid input, please use only valid numbers (1-6)"
     end
   end
+  def reset
+    puts "Would you like to try again? Yes (1)  No (2)" 
+    selection = gets.chomp.to_i
+    if selection == 1
+      @try_again = false
+      self.start  
+    elsif selection == 2
+      exit
+    else
+      @try_again = true
+      puts "Invalid input, please try again."
+    end  
+  end  
 end
 
 class Board #Todo lo telacionado con el tablero
@@ -115,17 +135,17 @@ class Board #Todo lo telacionado con el tablero
     guess = ""
     a.each do |n|
       if n == "1"
-        guess += "e\[41m 1 \e[0m"
+        guess += "\e[41m  1  \e[0m "
       elsif n == "2"
-        guess += "e\[42m 2 \e[0m"
+        guess += "\e[42m  2  \e[0m "
       elsif n == "3"
-        guess += "e\[43m 3 \e[0m"
+        guess += "\e[43m  3  \e[0m "
       elsif n == "4"
-        guess += "e\[44m 4 \e[0m"
+        guess += "\e[44m  4  \e[0m "
       elsif n == "5"
-        guess += "e\[45m 5 \e[0m"
+        guess += "\e[45m  5  \e[0m "
       elsif n == "6"
-        guess += "e\[46m 6 \e[0m"
+        guess += "\e[46m  6  \e[0m "
       end
     end
     clue = ""
@@ -138,16 +158,12 @@ class Board #Todo lo telacionado con el tablero
         clue += "."
       end
     end
-    puts guess + "Clues: " + clue
+    if b != [0,0,0,0]
+      puts guess + "Clues: " + clue
+    elsif b == [0,0,0,0]
+      puts guess + "Clues: " + clue
+      puts "You have guessed the code!"
+    end 
 
   end
-  def colorize(color_code)
-    "e\[#{color_code}m#{self}\e[0m"
-  end
-  def red; colorize(41) end
-  def green; colorize(42) end
-  def brown; colorize(43) end
-  def blue; colorize(44) end
-  def magenta; colorize(45) end
-  def cyan; colorize(46) end
 end
