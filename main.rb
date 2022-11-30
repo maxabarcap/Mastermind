@@ -23,6 +23,7 @@ class Game  #Permite el correcto funcionamiento del juego
     c = Code.new
     @code = c.generate
     @input = []
+    @sure_numbers =[]
   end
   def check #Compara un input con el codigo a descifrar, entrega la pista asociada (0 = existe y posicion correcta, 1 = existe pero en otra posicion, 2 = no existe en el codigo)
     copy = Marshal.load(Marshal.dump(@code))
@@ -60,13 +61,24 @@ class Game  #Permite el correcto funcionamiento del juego
     while @role == nil
       self.select_mode
     end
-    while (@turn_counter <= 12) and (@last_hint != [0,0,0,0])
+    while (@turn_counter <= 11) and (@last_hint != [0,0,0,0])
       if @role == "codebreaker"
+        puts "Type your guess, use only a 4 combination of valid numbers (1-6)"
         self.request_code
         @board.display(@array_code,self.check) ####Aqui deberia haber un display
-      elsif @role == "codemaker"
-        self.request_code
-        new_code = @input
+      else
+        break
+      end
+    end
+    if @role == "codemaker"
+      puts "Type the code you want the computer to guess"
+      self.request_code
+      @code = @array_code
+      @turn_counter = 0
+      while (@turn_counter <= 11) and (@last_hint != [0,0,0,0])
+        self.break
+        @last_input = Marshal.load(Marshal.dump(@input))
+        @board.display(@input,self.check)
       end
     end
     if @last_hint == [0,0,0,0]
@@ -75,6 +87,19 @@ class Game  #Permite el correcto funcionamiento del juego
       puts "You couldn't guess the code :("
       self.reset
     end    
+  end
+
+  def break
+    if @turn_counter == 0
+      @input = ["1","1","1","1"]
+      @turn_counter += 1
+      return
+    else
+      if @last_hint.include?(2)
+        
+      else
+        
+      end
   end
 
   def select_mode #Elegir el rol del jugador
@@ -88,16 +113,8 @@ class Game  #Permite el correcto funcionamiento del juego
       puts "Invalid input, please try again."
     end
   end
-
-  def breaker
-    
-  end
-
-  def maker
-
-  end
-
-  def request_code
+  
+  def request_code 
     model = ["1","2","3","4","5","6"]
     code_input = gets.chomp.to_i
     @array_code = code_input.to_s.split("")
@@ -112,6 +129,7 @@ class Game  #Permite el correcto funcionamiento del juego
       puts "Invalid input, please use only valid numbers (1-6)"
     end
   end
+
   def reset
     puts "Would you like to try again? Yes (1)  No (2)" 
     selection = gets.chomp.to_i
@@ -160,10 +178,11 @@ class Board #Todo lo telacionado con el tablero
     end
     if b != [0,0,0,0]
       puts guess + "Clues: " + clue
+      puts "Not quite correct"
     elsif b == [0,0,0,0]
       puts guess + "Clues: " + clue
       puts "You have guessed the code!"
-    end 
+    end   
 
   end
 end
